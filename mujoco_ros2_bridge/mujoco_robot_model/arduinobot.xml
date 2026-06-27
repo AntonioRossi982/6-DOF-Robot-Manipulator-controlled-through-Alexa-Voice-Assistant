@@ -1,0 +1,215 @@
+<mujoco model="arduinobot">
+
+  <!-- Global Physics parameters -->
+  <option timestep="0.002" gravity="0 0 -9.81"/>
+
+  <!-- 
+    Asset: Declare the STL meshes before using them.
+    MuJoCo requires that each mesh be declared here (in the <asset> section)
+    with a name and the relative path to the MJCF file.
+    The scale 0.01 converts from cm (STL units) to meters.
+  -->
+  <asset>
+    <mesh name="basement"          file="arduinobot_meshes/basement.STL"          scale="0.01 0.01 0.01"/>
+    <mesh name="base_plate"        file="arduinobot_meshes/base_plate.STL"        scale="0.01 0.01 0.01"/>
+    <mesh name="forward_drive_arm" file="arduinobot_meshes/forward_drive_arm.STL" scale="0.01 0.01 0.01"/>
+    <mesh name="horizontal_arm"    file="arduinobot_meshes/horizontal_arm.STL"    scale="0.01 0.01 0.01"/>
+    <mesh name="claw_support"      file="arduinobot_meshes/claw_support.STL"      scale="0.01 0.01 0.01"/>
+    <mesh name="right_finger"      file="arduinobot_meshes/right_finger.STL"      scale="0.01 0.01 0.01"/>
+    <mesh name="left_finger"       file="arduinobot_meshes/left_finger.STL"       scale="0.01 0.01 0.01"/>
+  </asset>
+
+  <worldbody>
+    <!-- Lights on the scene -->
+    <light pos="0 0 3" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <light pos="1 1 2" dir="-1 -1 -1" diffuse="0.4 0.4 0.4"/>
+
+    <!-- Floor -->
+    <geom name="floor" type="plane" size="2 2 0.1" rgba="0.8 0.8 0.8 1"/>
+
+    <!-- 
+      BASE_LINK — the robot's fixed base.
+      It has no joints — it is anchored to the world.
+      “pos” and “euler” correspond to the link's origin in the original URDF file.
+      
+      In MuJoCo, bodies are hierarchical:
+      worldbody → base_link → base_plate → forward_drive_arm → ...
+      The xyz offset “-0.5 -0.5 0” comes from the URDF visual origin.
+    -->
+    <body name="base_link" pos="0 0 0">
+      <geom name="base_link_geom"
+            type="mesh" mesh="basement"
+            pos="-0.5 -0.5 0"
+            rgba="0.8 0.8 0.8 1"
+            contype="1" conaffinity="1"/>
+
+      <!--
+        BASE_PLATE — first mobile link.
+        joint_1: rotation around the Z-axis (yaw).
+        pos="0 0 0.307" is relative to the origin of joint_1 in the URDF.
+        
+        In MuJoCo, the joint is declared INSIDE the child body,
+        not in the parent body as in URDF.
+      -->
+      <body name="base_plate" pos="0 0 0.307">
+        <joint name="joint_1"
+               type="hinge" 
+               axis="0 0 1"
+               range="-1.5708 1.5708"
+               damping="0.5"/>
+        <geom name="base_plate_geom"
+              type="mesh" mesh="base_plate"
+              pos="-0.39 -0.39 -0.56"
+              rgba="0.2 0.6 0.9 1"
+              contype="1" conaffinity="1"/>
+
+        <!--
+          FORWARD_DRIVE_ARM — second movable link.
+          joint_2: rotation around the X-axis (pitch).
+          pos="-0.02 0 0.35" is derived from the origin of joint_2 in the URDF.
+          Euler converts the RPY of the visual origin in the URDF.
+        -->
+        <body name="forward_drive_arm" pos="-0.02 0 0.35">
+          <joint name="joint_2"
+                 type="hinge"
+                 axis="1 0 0"
+                 range="-1.5708 1.5708"
+                 damping="0.5"/>
+          <geom name="forward_drive_arm_geom"
+                type="mesh" mesh="forward_drive_arm"
+                euler="0 -1.5708 1.5708"
+                pos="0.19 0.06 -0.08"
+                rgba="0.9 0.5 0.1 1"
+                contype="1" conaffinity="1"/>
+
+          <!--
+            HORIZONTAL_ARM — third movable link.
+            joint_3: rotation around the X-axis (pitch).
+            pos="0 0 0.8" is derived from the origin of joint_3 in the URDF.
+          -->
+          <body name="horizontal_arm" pos="0 0 0.8">
+            <joint name="joint_3"
+                   type="hinge"
+                   axis="1 0 0"
+                   range="-1.5708 1.5708"
+                   damping="0.5"/>
+            <geom name="horizontal_arm_geom"
+                  type="mesh" mesh="horizontal_arm"
+                  euler="1.5708 0 1.5708"
+                  pos="-0.03 -0.4 -0.06"
+                  rgba="0.2 0.7 0.3 1"
+                  contype="1" conaffinity="1"/>
+
+            <!--
+              CLAW_SUPPORT — fixed link (no joint).
+              Corresponds to the "horizontal_arm_to_claw_support" joint
+              of type fixed in the URDF.
+              pos="0 0.82 0" comes from the origin of that joint.
+            -->
+            <body name="claw_support" pos="0 0.82 0">
+              <geom name="claw_support_geom"
+                    type="mesh" mesh="claw_support"
+                    euler="0 0 1.5708"
+                    pos="0 -0.05 -0.15"
+                    rgba="0.5 0.5 0.5 1"
+                    contype="1" conaffinity="1"/>
+
+              <!--
+                GRIPPER_RIGHT — right finger.
+                joint_4: rotation around the Z-axis.
+                range: from -PI/2 to 0 (closing).
+                pos="-0.04 0.13 -0.1" comes from the URDF.
+              -->
+              <body name="gripper_right" pos="-0.04 0.13 -0.1">
+                <joint name="joint_4"
+                       type="hinge"
+                       axis="0 0 1"
+                       range="-1.5708 0.0"
+                       damping="0.1"/>
+                <geom name="gripper_right_geom"
+                      type="mesh" mesh="right_finger"
+                      euler="0 0 -1.5708"
+                      pos="-0.1 0.50 -0.1"
+                      rgba="0.8 0.2 0.2 1"
+                      contype="1" conaffinity="1"/>
+              </body>
+
+              <!--
+                GRIPPER_LEFT — left finger.
+                joint_5: mimic of joint_4 with multiplier -1.
+                In MuJoCo the mimic is implemented with an equality constraint
+                defined in the <equality> section below.
+                pos="-0.22 0.13 -0.1" comes from the URDF.
+              -->
+              <body name="gripper_left" pos="-0.22 0.13 -0.1">
+                <joint name="joint_5"
+                       type="hinge"
+                       axis="0 0 1"
+                       range="0.0 1.5708"
+                       damping="0.1"/>
+                <geom name="gripper_left_geom"
+                      type="mesh" mesh="left_finger"
+                      euler="0 0 -1.5708"
+                      pos="-0.04 0.50 -0.1"
+                      rgba="0.2 0.2 0.8 1"
+                      contype="1" conaffinity="1"/>
+              </body>
+
+              <!-- End effector — reference point for the tip -->
+              <body name="end_effector" pos="-0.13 0.25 -0.1">
+                <geom type="sphere" size="0.01" rgba="1 1 0 1"
+                      contype="0" conaffinity="0"/>
+              </body>
+
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <!--
+    EQUALITY CONSTRAINTS — implements the mimic joint.
+    
+    joint_5 = -1 * joint_4 (from the mimic definition in the URDF).
+    
+    In MuJoCo, this is expressed as:
+    joint_5 - (-1 * joint_4) = 0
+    that is: joint_5 + joint_4 = 0
+    
+    polycoef="0 1 0 0 0" means:
+    joint_slave = polycoef[0] + polycoef[1]*joint_master
+    therefore: joint_5 = 0 + 1*joint_4... 
+    
+    But we want joint_5 = -joint_4, so:
+    polycoef="0 -1 0 0 0"
+  -->
+  <equality>
+    <joint name="gripper_mimic"
+           joint1="joint_5"
+           joint2="joint_4"
+           polycoef="0 -1 0 0 0"/>
+  </equality>
+
+  <!--
+    ACTUATORS — control the joints.
+    
+    Only joint_1, joint_2, joint_3, and joint_4 are actuated.
+    joint_5 is constrained by an equality constraint—no actuator is needed.
+    
+    gear: torque multiplier
+    ctrllimited: enables limits on the control signal
+    ctrlrange: signal range [-1, 1]
+  -->
+  <actuator>
+    <motor name="act_joint1" joint="joint_1"
+           gear="30" ctrllimited="true" ctrlrange="-1 1"/>
+    <motor name="act_joint2" joint="joint_2"
+           gear="30" ctrllimited="true" ctrlrange="-1 1"/>
+    <motor name="act_joint3" joint="joint_3"
+           gear="30" ctrllimited="true" ctrlrange="-1 1"/>
+    <motor name="act_joint4" joint="joint_4"
+           gear="10" ctrllimited="true" ctrlrange="-1 1"/>
+  </actuator>
+
+</mujoco>
