@@ -1,0 +1,10 @@
+<mujoco model="arduinobot_vision"> <!-- The vision model for the Arduinobot -->
+  <include file="arduinobot.xml"/> <!-- Including the robot model description -->
+  <worldbody>
+    <camera name="top_cam" pos="0.4 0.6 1.8" xyaxes="1 0 0 0 1 0" fovy="45"/> <!-- Add the camera on the scene -->
+    <body name="target_cube" pos="0.4 0.6 0.04"> <!-- Define the target cube to manipulate in the vision tests -->
+      <geom name="cube_geom" type="box" size="0.04 0.04 0.04"
+            rgba="1 0 1 1" contype="0" conaffinity="0"/> <!-- Contype/Conaffinity disabled the collision properties (just for tests)-->
+    </body>
+  </worldbody>
+</mujoco>
