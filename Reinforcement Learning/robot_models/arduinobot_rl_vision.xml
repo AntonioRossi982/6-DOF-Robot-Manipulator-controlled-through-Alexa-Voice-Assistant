@@ -1,0 +1,10 @@
+<mujoco model="arduinobot_rl_vision">
+  <include file="arduinobot_train.xml"/>
+  <worldbody>
+    <camera name="top_cam" pos="0.4 0.6 1.8" xyaxes="1 0 0 0 1 0" fovy="45"/>
+    <body name="target_cube" pos="0.4 0.6 0.04">
+      <geom name="cube_geom" type="box" size="0.04 0.04 0.04"
+            rgba="1 0 1 1" contype="0" conaffinity="0"/>
+    </body>
+  </worldbody>
+</mujoco>

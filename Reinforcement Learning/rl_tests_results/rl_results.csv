@@ -1,0 +1,4 @@
+policy,success_rate,time_to_success_s,final_error_mm,ee_path_m
+random actions,0.0,nan,1226.2905497545262,3.257582830241563
+Inverse kinematics (DLS),0.89,1.9626404494382024,30.414935837576433,1.3748610969245962
+Proximal Policy Optimization (PPO),1.0,1.3567500000000001,25.788544011316883,1.697977902351572
